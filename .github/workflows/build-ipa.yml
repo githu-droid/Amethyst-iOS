@@ -32,8 +32,29 @@ jobs:
 
       - name: Build IPA
         run: |
+          set -o pipefail
           export PATH="$(brew --prefix)/bin:$PATH"
-          gmake -j"$(sysctl -n hw.ncpu)" package PLATFORM=2 BOOTJDK="${JAVA_HOME}/bin"
+          gmake -j"$(sysctl -n hw.ncpu)" package PLATFORM=2 BOOTJDK="${JAVA_HOME}/bin" 2>&1 | tee build.log
+
+      - name: Report build errors
+        if: failure()
+        run: |
+          {
+            echo "--- lines mentioning errors ---"
+            grep -n -i -E "error|\*\*\*|fatal|not found|No such file" build.log | head -25
+            echo "--- last 40 lines ---"
+            tail -n 40 build.log
+          } > build-summary.txt
+          MSG=$(sed -e 's/%/%25/g' -e 's/\r//g' build-summary.txt | awk '{printf "%s%%0A", $0}' | cut -c1-30000)
+          echo "::error title=Build failed::${MSG}"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
 
       - name: List build outputs
         run: ls -lah artifacts || true
