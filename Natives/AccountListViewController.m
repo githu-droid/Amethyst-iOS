@@ -44,7 +44,8 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return self.accountList.count + 1;
+    // Saved accounts + "Add account" row + "Local account" shortcut row
+    return self.accountList.count + 2;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -57,7 +58,17 @@
 
     if (indexPath.row == self.accountList.count) {
         cell.imageView.image = [UIImage imageNamed:@"IconAdd"];
+        cell.imageView.contentMode = UIViewContentModeCenter;
         cell.textLabel.text = localize(@"login.option.add", nil);
+        cell.detailTextLabel.text = localize(@"login.option.microsoft", nil);
+        return cell;
+    }
+
+    if (indexPath.row == self.accountList.count + 1) {
+        cell.imageView.image = [UIImage imageNamed:@"IconAdd"];
+        cell.imageView.contentMode = UIViewContentModeCenter;
+        cell.textLabel.text = localize(@"login.option.add", nil);
+        cell.detailTextLabel.text = localize(@"login.option.local", nil);
         return cell;
     }
 
@@ -87,6 +98,10 @@
 
     if (indexPath.row == self.accountList.count) {
         [self actionAddAccount:cell];
+        return;
+    }
+    if (indexPath.row == self.accountList.count + 1) {
+        [self actionLoginLocal:cell];
         return;
     }
 
@@ -124,7 +139,7 @@
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (indexPath.row == self.accountList.count) {
+    if (indexPath.row >= self.accountList.count) {
         return UITableViewCellEditingStyleNone;
     } else {
         return UITableViewCellEditingStyleDelete;
