@@ -1,0 +1,46 @@
+name: Build IPA (GitHub macOS runner)
+
+on:
+  push:
+    branches:
+      - local-account-row
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-14
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 8 (boot JDK for JavaApp)
+        id: jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '8'
+
+      - name: Install build tools
+        run: |
+          brew install make ldid cmake || true
+          which gmake ldid cmake
+          "${JAVA_HOME}/bin/javac" -version
+
+      - name: Build IPA
+        run: |
+          export PATH="$(brew --prefix)/bin:$PATH"
+          gmake -j"$(sysctl -n hw.ncpu)" package PLATFORM=2 BOOTJDK="${JAVA_HOME}/bin"
+
+      - name: List build outputs
+        run: ls -lah artifacts || true
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Amethyst-ipa
+          path: artifacts/*.ipa
+          if-no-files-found: error
