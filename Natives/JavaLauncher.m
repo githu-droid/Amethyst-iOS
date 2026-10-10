@@ -2,6 +2,9 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <libgen.h>
+#include <mach/mach.h>
+#include <mach/exception.h>
+#include <mach/thread_status.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
