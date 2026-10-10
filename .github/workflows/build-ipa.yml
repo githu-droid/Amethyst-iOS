@@ -9,13 +9,26 @@ on:
 jobs:
   build:
     name: Build unsigned IPA
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 120
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Select newest Xcode 26 (app needs the iOS 26 SDK)
+        run: |
+          ls -d /Applications/Xcode*.app || true
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XC" ]; then
+            echo "::error title=No Xcode 26::No Xcode 26 found on this runner image"
+            exit 1
+          fi
+          echo "Using $XC"
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
 
       - name: Set up JDK 8 (boot JDK for JavaApp)
         id: jdk
